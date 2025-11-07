@@ -108,4 +108,4 @@ const loadSampleData = async () => {
   }
 };
 
-
+createCollection().then(()=>loadSampleData())
