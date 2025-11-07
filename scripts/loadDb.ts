@@ -1,5 +1,9 @@
-import "dotenv/config";
+import { DataAPIClient } from "@datastax/astra-db-ts";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import OpenAI from "openai";
+import "dotenv/config";
+
+type SimilarityMetric = "dot_product" | "cosine" | "euclidean";
 
 const {
   ASTRA_DB_NAMESPACE,
@@ -25,3 +29,30 @@ const f1Data = [
   "https://www.britannica.com/sports/Formula-One-automobile-racing",
   "https://www.formulaonehistory.com/",
 ];
+
+const client = new DataAPIClient(ASTRA_DB_APPLICATION_TOKEN);
+
+// ✅ 'namespace' option is deprecated — removed
+const db = client.db(ASTRA_DB_API_ENDPOINT);
+
+// ✅ include namespace when creating or getting a collection
+// const collection = db.collection(
+//   `${ASTRA_DB_NAMESPACE}.${ASTRA_DB_COLLECTION}`
+// );
+
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 512,
+  chunkOverlap: 100,
+});
+
+const createCollection = async (
+  similarityMetric: SimilarityMetric = "dot_product"
+) => {
+  const res = await db.createCollection(ASTRA_DB_COLLECTION, {
+    vector: {
+      dimension: 1536,
+      metric: similarityMetric,
+    },
+  });
+  console.log(res)
+};
